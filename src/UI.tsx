@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Clock3,
   Maximize2,
   Minimize2,
   RotateCcw,
-  Settings,
   TimerOff,
-  X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -19,8 +17,6 @@ import {
   type FlipCardProps,
   type FlipPanelProps,
   type SeparatorProps,
-  type SettingsPanelProps,
-  type ToggleProps,
 } from './logic';
 
 function FlipPanel({ value, position, className = '' }: FlipPanelProps) {
@@ -114,99 +110,77 @@ function Separator({ label }: SeparatorProps) {
   );
 }
 
-interface IconToggleProps extends ToggleProps {
+interface IconButtonProps {
   icon: LucideIcon;
+  label: string;
+  isActive?: boolean;
+  onClick: () => void;
 }
 
-function IconToggle({ checked, label, description, onChange, icon: Icon }: IconToggleProps) {
+function IconButton({ icon: Icon, label, isActive = false, onClick }: IconButtonProps) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-neutral-800 bg-neutral-950/80 px-4 py-3">
-      <span className="flex min-w-0 items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-neutral-900 text-white">
-          <Icon size={20} strokeWidth={2.5} aria-hidden="true" />
-        </span>
-        <span className="min-w-0">
-          <span className="block font-mono text-sm font-black uppercase tracking-[0.18em] text-white">
-            {label}
-          </span>
-          <span className="mt-1 block text-sm leading-5 text-neutral-400">{description}</span>
-        </span>
-      </span>
-
-      <input
-        type="checkbox"
-        className="sr-only"
-        checked={checked}
-        onChange={(event) => {
-          onChange(event.currentTarget.checked);
-        }}
-      />
-      <span
-        className={[
-          'relative h-7 w-12 shrink-0 rounded-full shadow-inner shadow-black transition',
-          checked ? 'bg-white' : 'bg-neutral-800',
-        ].join(' ')}
-      >
-        <span
-          className={[
-            'absolute left-1 top-1 h-5 w-5 rounded-full transition',
-            checked ? 'translate-x-5 bg-black' : 'translate-x-0 bg-white',
-          ].join(' ')}
-        />
-      </span>
-    </label>
+    <button
+      type="button"
+      className={[
+        'flex h-12 w-12 items-center justify-center rounded-full border shadow-2xl shadow-black/50 backdrop-blur transition',
+        isActive
+          ? 'border-white bg-white text-black'
+          : 'border-neutral-800 bg-black/80 text-neutral-300 hover:border-white hover:text-white',
+      ].join(' ')}
+      onClick={onClick}
+      aria-label={label}
+    >
+      <Icon size={22} strokeWidth={2.5} aria-hidden="true" />
+    </button>
   );
 }
 
-function SettingsPanel({ settings, onSettingChange, onReset }: SettingsPanelProps) {
-  return (
-    <aside className="fixed bottom-20 left-4 z-50 w-[calc(100vw-2rem)] max-w-md rounded-xl border border-neutral-800 bg-black/90 p-4 shadow-2xl shadow-black/60 backdrop-blur">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="flex items-center gap-3 font-mono text-sm font-black uppercase tracking-[0.35em] text-white">
-          <Settings size={18} strokeWidth={2.5} aria-hidden="true" />
-          General
-        </h2>
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-md border border-neutral-700 text-neutral-200 transition hover:border-white hover:text-white"
-          onClick={onReset}
-          aria-label="Reset settings"
-          title="Reset settings"
-        >
-          <RotateCcw size={18} strokeWidth={2.5} aria-hidden="true" />
-        </button>
-      </div>
+interface SettingsDockProps {
+  isMilitaryTime: boolean;
+  hideSeconds: boolean;
+  onToggleMilitaryTime: () => void;
+  onToggleHideSeconds: () => void;
+  onEnterFullScreen: () => void;
+  onReset: () => void;
+}
 
-      <div className="grid gap-3">
-        <IconToggle
-          checked={settings.isMilitaryTime}
-          icon={Clock3}
-          label="Military Time"
-          description="Use 24-hour time instead of 12-hour time."
-          onChange={(checked) => {
-            onSettingChange({ isMilitaryTime: checked });
-          }}
-        />
-        <IconToggle
-          checked={settings.hideSeconds}
-          icon={TimerOff}
-          label="Hours + Minutes"
-          description="Hide seconds and show only hours and minutes."
-          onChange={(checked) => {
-            onSettingChange({ hideSeconds: checked });
-          }}
-        />
-        <IconToggle
-          checked={settings.fullScreenMode}
-          icon={Maximize2}
-          label="Full Screen Mode"
-          description="Expand the clock and hide the settings panel."
-          onChange={(checked) => {
-            onSettingChange({ fullScreenMode: checked });
-          }}
-        />
-      </div>
-    </aside>
+function SettingsDock({
+  isMilitaryTime,
+  hideSeconds,
+  onToggleMilitaryTime,
+  onToggleHideSeconds,
+  onEnterFullScreen,
+  onReset,
+}: SettingsDockProps) {
+  return (
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3">
+      <IconButton
+        icon={Clock3}
+        label="Toggle 24-hour time"
+        isActive={isMilitaryTime}
+        onClick={onToggleMilitaryTime}
+      />
+      <IconButton
+        icon={TimerOff}
+        label="Toggle seconds"
+        isActive={hideSeconds}
+        onClick={onToggleHideSeconds}
+      />
+      <IconButton icon={Maximize2} label="Enter full screen" onClick={onEnterFullScreen} />
+      <IconButton icon={RotateCcw} label="Reset settings" onClick={onReset} />
+    </div>
+  );
+}
+
+interface FullScreenExitProps {
+  onExit: () => void;
+}
+
+function FullScreenExit({ onExit }: FullScreenExitProps) {
+  return (
+    <div className="fixed bottom-4 left-4 z-50">
+      <IconButton icon={Minimize2} label="Exit full screen" onClick={onExit} />
+    </div>
   );
 }
 
@@ -248,7 +222,6 @@ function FlipClock({ settings }: { settings: ClockSettings }) {
 
 export function ClockApp() {
   const { settings, updateSettings, resetSettings } = useSettings();
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleFullscreenChange = (): void => {
@@ -274,54 +247,33 @@ export function ClockApp() {
       <FlipClock settings={settings} />
 
       {settings.fullScreenMode && (
-        <button
-          type="button"
-          className="fixed bottom-4 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-800 bg-black/80 text-neutral-300 shadow-2xl shadow-black/50 backdrop-blur transition hover:border-white hover:text-white"
-          onClick={() => {
+        <FullScreenExit
+          onExit={() => {
             requestFullscreenMode(false);
             updateSettings({ fullScreenMode: false });
-          }}
-          aria-label="Exit full screen"
-          title="Exit full screen"
-        >
-          <Minimize2 size={22} strokeWidth={2.5} aria-hidden="true" />
-        </button>
-      )}
-
-      {!settings.fullScreenMode && isSettingsOpen && (
-        <SettingsPanel
-          settings={settings}
-          onReset={() => {
-            requestFullscreenMode(false);
-            resetSettings();
-          }}
-          onSettingChange={(nextSettings) => {
-            if (nextSettings.fullScreenMode !== undefined) {
-              requestFullscreenMode(nextSettings.fullScreenMode);
-              setIsSettingsOpen(false);
-            }
-
-            updateSettings(nextSettings);
           }}
         />
       )}
 
       {!settings.fullScreenMode && (
-        <button
-          type="button"
-          className="fixed bottom-4 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-800 bg-black/80 text-neutral-300 shadow-2xl shadow-black/50 backdrop-blur transition hover:border-white hover:text-white"
-          onClick={() => {
-            setIsSettingsOpen((currentValue) => !currentValue);
+        <SettingsDock
+          isMilitaryTime={settings.isMilitaryTime}
+          hideSeconds={settings.hideSeconds}
+          onToggleMilitaryTime={() => {
+            updateSettings({ isMilitaryTime: !settings.isMilitaryTime });
           }}
-          aria-label={isSettingsOpen ? 'Close settings' : 'Open settings'}
-          title={isSettingsOpen ? 'Close settings' : 'Open settings'}
-        >
-          {isSettingsOpen ? (
-            <X size={22} strokeWidth={2.5} aria-hidden="true" />
-          ) : (
-            <Settings size={22} strokeWidth={2.5} aria-hidden="true" />
-          )}
-        </button>
+          onToggleHideSeconds={() => {
+            updateSettings({ hideSeconds: !settings.hideSeconds });
+          }}
+          onEnterFullScreen={() => {
+            requestFullscreenMode(true);
+            updateSettings({ fullScreenMode: true });
+          }}
+          onReset={() => {
+            requestFullscreenMode(false);
+            resetSettings();
+          }}
+        />
       )}
     </div>
   );
